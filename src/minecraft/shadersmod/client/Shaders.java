@@ -1728,7 +1728,7 @@ public class Shaders
 
         if (!isShaderPackInitialized)
         {
-            checkGLError("Shaders.init pre");
+            checkGLError("Shaders.onInit pre");
 
             if (getShaderPackName() != null)
             {
@@ -2005,7 +2005,7 @@ public class Shaders
                 ;
             }
 
-            checkGLError("Shaders.init");
+            checkGLError("Shaders.onInit");
         }
     }
 
@@ -3458,7 +3458,7 @@ public class Shaders
         checkGLError("pre beginRender");
         checkWorldChanged(mc.world);
         mc = minecraft;
-        mc.mcProfiler.startSection("init");
+        mc.mcProfiler.startSection("onInit");
         entityRenderer = mc.entityRenderer;
 
         if (!isShaderPackInitialized)

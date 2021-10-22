@@ -35,12 +35,12 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.imageio.ImageIO;
+
+import gg.porno.Main;
+import gg.porno.client.events.events.EventKeyboard;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -603,6 +603,8 @@ public class Minecraft implements IThreadListener, ISnooperInfo
         this.checkGLError("Post startup");
         this.ingameGUI = new GuiIngame(this);
 
+        Main.getter.onInit();
+
         if (this.serverName != null)
         {
             this.displayGuiScreen(new GuiConnecting(new GuiMainMenu(), this, this.serverName, this.serverPort));
@@ -1116,6 +1118,8 @@ public class Minecraft implements IThreadListener, ISnooperInfo
      */
     public void shutdownMinecraftApplet()
     {
+        Main.getter.onClose();
+
         try
         {
             LOGGER.info("Stopping!");
@@ -2058,6 +2062,9 @@ public class Minecraft implements IThreadListener, ISnooperInfo
 
                 if (this.currentScreen == null)
                 {
+                    EventKeyboard event = new EventKeyboard(i);
+                    event.call();
+
                     if (i == 1)
                     {
                         this.displayInGameMenu();

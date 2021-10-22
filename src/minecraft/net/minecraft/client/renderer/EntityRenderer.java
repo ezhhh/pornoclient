@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Random;
 import javax.annotation.Nullable;
 import javax.imageio.ImageIO;
+
+import gg.porno.client.events.events.EventRender3D;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBed;
 import net.minecraft.block.material.Material;
@@ -1905,6 +1907,11 @@ public class EntityRenderer implements IResourceManagerReloadListener
             this.mc.mcProfiler.endStartSection("forge_render_last");
             Reflector.callVoid(Reflector.ForgeHooksClient_dispatchRenderLast, renderglobal, partialTicks);
         }
+
+        EventRender3D event = new EventRender3D(partialTicks);
+        event.call();
+
+        if(event.isCancelled()) return;
 
         this.mc.mcProfiler.endStartSection("hand");
 

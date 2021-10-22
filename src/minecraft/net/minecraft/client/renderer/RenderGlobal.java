@@ -176,7 +176,7 @@ public class RenderGlobal implements IWorldEventListener, IResourceManagerReload
     private ChunkRenderContainer renderContainer;
     private int renderDistanceChunks = -1;
 
-    /** Render entities startup counter (init value=2) */
+    /** Render entities startup counter (onInit value=2) */
     private int renderEntitiesStartupCounter = 2;
 
     /** Count entities total */

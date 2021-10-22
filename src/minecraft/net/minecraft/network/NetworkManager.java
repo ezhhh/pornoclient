@@ -2,6 +2,8 @@ package net.minecraft.network;
 
 import com.google.common.collect.Queues;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import gg.porno.client.events.events.EventPacketReceive;
+import gg.porno.client.events.events.EventPacketSend;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelException;
@@ -148,6 +150,11 @@ public class NetworkManager extends SimpleChannelInboundHandler < Packet<? >>
         {
             try
             {
+                EventPacketReceive event = new EventPacketReceive(p_channelRead0_2_);
+                event.call();
+
+                if(event.isCancelled()) return;
+
                 ((Packet<INetHandler>)p_channelRead0_2_).processPacket(this.packetListener);
             }
             catch (ThreadQuickExitException var4)
@@ -218,8 +225,14 @@ public class NetworkManager extends SimpleChannelInboundHandler < Packet<? >>
      */
     private void dispatchPacket(final Packet<?> inPacket, @Nullable final GenericFutureListener <? extends Future <? super Void >> [] futureListeners)
     {
+
         final EnumConnectionState enumconnectionstate = EnumConnectionState.getFromPacket(inPacket);
         final EnumConnectionState enumconnectionstate1 = (EnumConnectionState)this.channel.attr(PROTOCOL_ATTRIBUTE_KEY).get();
+
+        EventPacketSend event = new EventPacketSend(inPacket);
+        event.call();
+
+        if(event.isCancelled()) return;
 
         if (enumconnectionstate1 != enumconnectionstate)
         {

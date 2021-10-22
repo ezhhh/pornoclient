@@ -1,5 +1,7 @@
 package net.minecraft.client.gui;
-import java.awt.color.;
+import java.awt.color.*;
+
+import gg.porno.client.events.events.EventRender2D;
 import org.lwjgl.input.Keyboard;
 import java.io.IOException;
 import com.google.common.base.Predicate;
@@ -169,15 +171,20 @@ public class GuiIngame extends Gui
 
     public void renderGameOverlay(float partialTicks)
     {
-        ScaledResolution scaledresolution = new ScaledResolution(this.mc);
-        int i = scaledresolution.getScaledWidth();
-        int j = scaledresolution.getScaledHeight();
+        ScaledResolution sr = new ScaledResolution(this.mc);
+        int i = sr.getScaledWidth();
+        int j = sr.getScaledHeight();
         FontRenderer fontrenderer = this.getFontRenderer();
         GlStateManager.enableBlend();
 
+        EventRender2D event = new EventRender2D(sr.getScaledWidth(), sr.getScaledHeight(), partialTicks);
+        event.call();
+
+        if(event.isCancelled()) return;
+
         if (Config.isVignetteEnabled())
         {
-            this.renderVignette(this.mc.player.getBrightness(), scaledresolution);
+            this.renderVignette(this.mc.player.getBrightness(), sr);
         }
         else
         {
@@ -189,7 +196,7 @@ public class GuiIngame extends Gui
 
         if (this.mc.gameSettings.thirdPersonView == 0 && itemstack.getItem() == Item.getItemFromBlock(Blocks.PUMPKIN))
         {
-            this.renderPumpkinOverlay(scaledresolution);
+            this.renderPumpkinOverlay(sr);
         }
 
         if (!this.mc.player.isPotionActive(MobEffects.NAUSEA))
@@ -198,23 +205,23 @@ public class GuiIngame extends Gui
 
             if (f > 0.0F)
             {
-                this.renderPortal(f, scaledresolution);
+                this.renderPortal(f, sr);
             }
         }
 
         if (this.mc.playerController.isSpectator())
         {
-            this.spectatorGui.renderTooltip(scaledresolution, partialTicks);
+            this.spectatorGui.renderTooltip(sr, partialTicks);
         }
         else
         {
-            this.renderHotbar(scaledresolution, partialTicks);
+            this.renderHotbar(sr, partialTicks);
         }
 
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         this.mc.getTextureManager().bindTexture(ICONS);
         GlStateManager.enableBlend();
-        this.renderAttackIndicator(partialTicks, scaledresolution);
+        this.renderAttackIndicator(partialTicks, sr);
         GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
         this.mc.mcProfiler.startSection("bossHealth");
         this.overlayBoss.renderBossHealth();
@@ -224,10 +231,10 @@ public class GuiIngame extends Gui
 
         if (this.mc.playerController.shouldDrawHUD())
         {
-            this.renderPlayerStats(scaledresolution);
+            this.renderPlayerStats(sr);
         }
 
-        this.renderMountHealth(scaledresolution);
+        this.renderMountHealth(sr);
         GlStateManager.disableBlend();
 
         if (this.mc.player.getSleepTimer() > 0)
@@ -255,32 +262,32 @@ public class GuiIngame extends Gui
 
         if (this.mc.player.isRidingHorse())
         {
-            this.renderHorseJumpBar(scaledresolution, k1);
+            this.renderHorseJumpBar(sr, k1);
         }
         else if (this.mc.playerController.gameIsSurvivalOrAdventure())
         {
-            this.renderExpBar(scaledresolution, k1);
+            this.renderExpBar(sr, k1);
         }
 
         if (this.mc.gameSettings.heldItemTooltips && !this.mc.playerController.isSpectator())
         {
-            this.renderSelectedItem(scaledresolution);
+            this.renderSelectedItem(sr);
         }
         else if (this.mc.player.isSpectator())
         {
-            this.spectatorGui.renderSelectedItem(scaledresolution);
+            this.spectatorGui.renderSelectedItem(sr);
         }
 
         if (this.mc.isDemo())
         {
-            this.renderDemo(scaledresolution);
+            this.renderDemo(sr);
         }
 
-        this.renderPotionEffects(scaledresolution);
+        this.renderPotionEffects(sr);
 
         if (this.mc.gameSettings.showDebugInfo)
         {
-            this.overlayDebug.renderDebugInfo(scaledresolution);
+            this.overlayDebug.renderDebugInfo(sr);
         }
 
         if (this.recordPlayingUpFor > 0)
@@ -315,7 +322,7 @@ public class GuiIngame extends Gui
             this.mc.mcProfiler.endSection();
         }
 
-        this.overlaySubtitle.renderSubtitles(scaledresolution);
+        this.overlaySubtitle.renderSubtitles(sr);
 
         if (this.titlesTimer > 0)
         {
@@ -376,7 +383,7 @@ public class GuiIngame extends Gui
 
         if (scoreobjective1 != null)
         {
-            this.renderScoreboard(scoreobjective1, scaledresolution);
+            this.renderScoreboard(scoreobjective1, sr);
         }
 
         GlStateManager.enableBlend();

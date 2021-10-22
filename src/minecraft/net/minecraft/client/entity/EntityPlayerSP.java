@@ -2,6 +2,10 @@ package net.minecraft.client.entity;
 
 import java.util.List;
 import javax.annotation.Nullable;
+
+import gg.porno.client.events.events.EventMotion;
+import gg.porno.client.events.events.EventPostMotion;
+import gg.porno.client.events.events.EventSlowdown;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ElytraSound;
@@ -257,7 +261,10 @@ public class EntityPlayerSP extends AbstractClientPlayer
      */
     private void onUpdateWalkingPlayer()
     {
-        boolean flag = this.isSprinting();
+        EventMotion eventMotion = new EventMotion(this.posX, this.posY, this.posZ, this.rotationYaw, this.rotationPitch, this.onGround);
+        eventMotion.call();
+
+        boolean flag = mc.player.isSprinting();
 
         if (flag != this.serverSprintState)
         {
@@ -292,54 +299,57 @@ public class EntityPlayerSP extends AbstractClientPlayer
         if (this.isCurrentViewEntity())
         {
             AxisAlignedBB axisalignedbb = this.getEntityBoundingBox();
-            double d0 = this.posX - this.lastReportedPosX;
-            double d1 = axisalignedbb.minY - this.lastReportedPosY;
-            double d2 = this.posZ - this.lastReportedPosZ;
-            double d3 = (double)(this.rotationYaw - this.lastReportedYaw);
-            double d4 = (double)(this.rotationPitch - this.lastReportedPitch);
+            double d0 = eventMotion.getX() - this.lastReportedPosX;
+            double d1 = eventMotion.getY() - this.lastReportedPosY;
+            double d2 = eventMotion.getZ() - this.lastReportedPosZ;
+            double d3 = (double)(eventMotion.getYaw() - this.lastReportedYaw);
+            double d4 = (double)(eventMotion.getPitch() - this.lastReportedPitch);
             ++this.positionUpdateTicks;
             boolean flag2 = d0 * d0 + d1 * d1 + d2 * d2 > 9.0E-4D || this.positionUpdateTicks >= 20;
             boolean flag3 = d3 != 0.0D || d4 != 0.0D;
 
             if (this.isRiding())
             {
-                this.connection.sendPacket(new CPacketPlayer.PositionRotation(this.motionX, -999.0D, this.motionZ, this.rotationYaw, this.rotationPitch, this.onGround));
+                this.connection.sendPacket(new CPacketPlayer.PositionRotation(this.motionX, -999.0D, this.motionZ, eventMotion.getYaw(), eventMotion.getPitch(), eventMotion.isOnGround()));
                 flag2 = false;
             }
             else if (flag2 && flag3)
             {
-                this.connection.sendPacket(new CPacketPlayer.PositionRotation(this.posX, axisalignedbb.minY, this.posZ, this.rotationYaw, this.rotationPitch, this.onGround));
+                this.connection.sendPacket(new CPacketPlayer.PositionRotation(eventMotion.getX(), eventMotion.getY(), eventMotion.getZ(), eventMotion.getYaw(), eventMotion.getPitch(), eventMotion.isOnGround()));
             }
             else if (flag2)
             {
-                this.connection.sendPacket(new CPacketPlayer.Position(this.posX, axisalignedbb.minY, this.posZ, this.onGround));
+                this.connection.sendPacket(new CPacketPlayer.Position(eventMotion.getX(), eventMotion.getY(), eventMotion.getZ(), eventMotion.isOnGround()));
             }
             else if (flag3)
             {
-                this.connection.sendPacket(new CPacketPlayer.Rotation(this.rotationYaw, this.rotationPitch, this.onGround));
+                this.connection.sendPacket(new CPacketPlayer.Rotation(eventMotion.getYaw(), eventMotion.getPitch(), eventMotion.isOnGround()));
             }
-            else if (this.prevOnGround != this.onGround)
+            else if (this.prevOnGround != eventMotion.isOnGround())
             {
-                this.connection.sendPacket(new CPacketPlayer(this.onGround));
+                this.connection.sendPacket(new CPacketPlayer(eventMotion.isOnGround()));
             }
 
             if (flag2)
             {
-                this.lastReportedPosX = this.posX;
-                this.lastReportedPosY = axisalignedbb.minY;
-                this.lastReportedPosZ = this.posZ;
+                this.lastReportedPosX = eventMotion.getX();
+                this.lastReportedPosY = eventMotion.getY();
+                this.lastReportedPosZ = eventMotion.getZ();
                 this.positionUpdateTicks = 0;
             }
 
             if (flag3)
             {
-                this.lastReportedYaw = this.rotationYaw;
-                this.lastReportedPitch = this.rotationPitch;
+                this.lastReportedYaw = eventMotion.getYaw();
+                this.lastReportedPitch = eventMotion.getPitch();
             }
 
-            this.prevOnGround = this.onGround;
+            this.prevOnGround = eventMotion.isOnGround();
             this.autoJumpEnabled = this.mc.gameSettings.autoJump;
         }
+
+        EventPostMotion eventPostMotion = new EventPostMotion();
+        eventPostMotion.call();
     }
 
     @Nullable
@@ -973,9 +983,14 @@ public class EntityPlayerSP extends AbstractClientPlayer
 
         if (this.isHandActive() && !this.isRiding())
         {
-            this.movementInput.moveStrafe *= 0.2F;
-            this.movementInput.field_192832_b *= 0.2F;
-            this.sprintToggleTimer = 0;
+            EventSlowdown event = new EventSlowdown();
+            event.call();
+
+            if(!event.isCancelled()){
+                this.movementInput.moveStrafe *= 0.2F;
+                this.movementInput.field_192832_b *= 0.2F;
+                this.sprintToggleTimer = 0;
+            }
         }
 
         boolean flag3 = false;
